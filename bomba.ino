@@ -14,8 +14,8 @@ int numNote = 16;
 int nota[] = {
   261, 528, 261, 528, 261, 528, 261, 528,  261, 528, 261, 528, 261, 528, 261, 528};
 
-const byte buttonTime = 9;
-const byte buttonStart = 8;
+const byte buttonTime = 8;
+const byte buttonStart = 3;
 const byte buzzer = 2;
 byte filoDisinnesco = 10;
 byte filoTempo = 11;
@@ -29,6 +29,7 @@ boolean tempoTagliato = false;
 boolean disinnescoTagliato = false;
 boolean secondiTagliato = false;
 boolean esplosa = false;
+boolean startUp = true;
 byte decimiDaTogliere = 1;
 
 
@@ -95,9 +96,19 @@ void loop()
       else 
         premuto = false;
 
-      val = val = digitalRead(buttonStart);
+      val = digitalRead(buttonStart);
+      int fili = checkFili();
+      
       if (val == HIGH && minuti > 0)
       {
+        if (fili > 0)
+        {
+            writeError(fili);
+            delay(15);
+        }
+        else
+        {
+        startUp = true;
         statoBomba = INFUNZIONE;
         tempoDelay = 100;
         tone(buzzer, 770);
@@ -106,6 +117,7 @@ void loop()
         delay(180);
         noTone(buzzer);
         delay(100);
+        }
       }
       break; 
     }
@@ -113,11 +125,18 @@ void loop()
   case INFUNZIONE:
     {
       delay(tempoDelay);
+      noTone(buzzer);
       scriviTempo(minuti, secondi, decimiSecondi); 
-      if(minuti == 0 && secondi == 0 && decimiSecondi == 0)
+      if(minuti == 0 && secondi == 0 && decimiSecondi == 0 || startButtonIsLow())
       {
         esplosa = true;
-        boom();
+        if(startButtonIsLow())
+        {
+            noob();
+            startUp = false;
+        }
+        else
+            boom();
       }
       if (!esplosa)
       {
@@ -129,9 +148,9 @@ void loop()
 
   case GAMEOVER:
     {
-      Serial.println("dio cane");
-      int val = digitalRead(buttonStart);
-      if (val == HIGH)
+      
+      //Serial.println(startButtonIsLow());
+      if (startButtonIsLow() && startUp)
       {
         statoBomba = START;
         tone(buzzer, 50);
@@ -139,6 +158,12 @@ void loop()
         noTone(buzzer);
         delay(300);
       }
+      
+      if (!startButtonIsLow())
+      {
+        startUp = true;
+      }
+      delay(15);
       break;
     }
 
@@ -176,6 +201,7 @@ void aggiornaTempo()
   {
     decimiSecondi = 9;
     secondi--;
+    tone(buzzer, 900);
   }
   if(secondi > 61)
   {
@@ -206,12 +232,24 @@ void settaFili()
   {
     filo30Secondi = int(random(10, 14));
   }
+}  
   
-}
-
-
-
-
+  boolean startButtonIsLow()
+  {
+    int val = digitalRead(buttonStart);
+    return val == LOW;
+  }
+  
+  int checkFili()
+  {
+     for(int i = 10; i < 13; i++)
+     {
+       int val = digitalRead(i); 
+       if (val > 0)
+         return i;
+     }
+     return 0;
+  }
 
 
 

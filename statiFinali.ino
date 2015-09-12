@@ -25,4 +25,15 @@ void defused()
   statoBomba = GAMEOVER;
 }
 
+void noob()
+{
+  writeYouNoob();
+    for (int i = 0; i < numNote; i++)
+  {
+    tone(buzzer, nota[i]);
+    delay(350);
+    noTone(buzzer);
+  }
 
+  statoBomba = GAMEOVER;
+}
