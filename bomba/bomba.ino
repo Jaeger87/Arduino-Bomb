@@ -10,13 +10,26 @@ enum  stati {
 
 stati statoBomba = START; 
 
+int porteFili[] = {
+  8,9,10,11,12};
+
 int numNote = 16;
 int nota[] = {
   261, 528, 261, 528, 261, 528, 261, 528,  261, 528, 261, 528, 261, 528, 261, 528};
 
-const byte buttonTime = 8;
+
+const byte minFilo = 8;
+const byte maxFilo = 13;
+
+
+const byte buttonTime = 4;
 const byte buttonStart = 3;
 const byte buzzer = 2;
+const byte sirena = 13;
+const int tilt = A0;
+
+int tiltStatus;
+byte filoBoom = 9;
 byte filoDisinnesco = 10;
 byte filoTempo = 11;
 byte filo30Secondi = 12;
@@ -28,8 +41,10 @@ boolean premuto = false;
 boolean tempoTagliato = false;
 boolean disinnescoTagliato = false;
 boolean secondiTagliato = false;
+boolean boomTagliato = false;
 boolean esplosa = false;
 boolean startUp = true;
+boolean opzionale = true;
 byte decimiDaTogliere = 1;
 
 
@@ -53,15 +68,19 @@ void setup()
   tempoTagliato = false;
   disinnescoTagliato = false;
   secondiTagliato = false;
+  boomTagliato = false;
   esplosa = false;
   premuto = false;
+  opzionale = true;
   randomSeed(analogRead(0));
-  settaFili();
 
+  pinMode(tilt, INPUT);
+  pinMode(8, INPUT_PULLUP);
+  pinMode(9, INPUT_PULLUP);
   pinMode(10, INPUT_PULLUP);
   pinMode(11, INPUT_PULLUP);
   pinMode(12, INPUT_PULLUP);
-  pinMode(13, INPUT_PULLUP);
+  pinMode(13, OUTPUT);
 } 
 
 
@@ -97,26 +116,30 @@ void loop()
         premuto = false;
 
       val = digitalRead(buttonStart);
-      int fili = checkFili();
-      
+
       if (val == HIGH && minuti > 0)
       {
-        if (fili > 0)
+        int fili = checkFili();
+        if (fili > 0 && fili != 12)
         {
-            writeError(fili);
-            delay(15);
+          writeError(fili);
+          delay(15);
         }
         else
         {
-        startUp = true;
-        statoBomba = INFUNZIONE;
-        tempoDelay = 100;
-        tone(buzzer, 770);
-        delay(110);
-        tone(buzzer, 870);
-        delay(180);
-        noTone(buzzer);
-        delay(100);
+          if(fili > 0)
+            opzionale = false;
+          settaFili();
+          startUp = true;
+          statoBomba = INFUNZIONE;
+          tempoDelay = 100;
+          tiltStatus = digitalRead(tilt);
+          tone(buzzer, 770);
+          delay(110);
+          tone(buzzer, 870);
+          delay(180);
+          noTone(buzzer);
+          delay(100);
         }
       }
       break; 
@@ -132,11 +155,11 @@ void loop()
         esplosa = true;
         if(startButtonIsLow())
         {
-            noob();
-            startUp = false;
+          noob();
+          startUp = false;
         }
         else
-            boom();
+          boom();
       }
       if (!esplosa)
       {
@@ -148,17 +171,17 @@ void loop()
 
   case GAMEOVER:
     {
-      
-      //Serial.println(startButtonIsLow());
+
       if (startButtonIsLow() && startUp)
       {
         statoBomba = START;
+        digitalWrite(sirena, LOW);
         tone(buzzer, 50);
         delay(120);
         noTone(buzzer);
         delay(300);
       }
-      
+
       if (!startButtonIsLow())
       {
         startUp = true;
@@ -221,35 +244,62 @@ void aggiornaTempo()
 
 void settaFili()
 {
-  filoDisinnesco = int(random(10, 14)); 
-  filoTempo = int(random(10, 14)); 
-  filo30Secondi = int(random(10, 14));
-  while(filoDisinnesco == filoTempo)
+  if(opzionale)
   {
-    filoTempo = int(random(10, 14));
+    filoDisinnesco = assegnaFilo(5);
+    filoTempo = assegnaFilo(4);
+    filo30Secondi = assegnaFilo(3);
+    filoBoom = assegnaFilo(2);
   }
-    while(filoTempo == filo30Secondi)
+  else
   {
-    filo30Secondi = int(random(10, 14));
+
+    filoDisinnesco = int(random(minFilo, maxFilo -1)); 
+    filoTempo = int(random(minFilo, maxFilo -1)); 
+    filo30Secondi = int(random(minFilo, maxFilo -1));
+    while(filoDisinnesco == filoTempo)
+    {
+      filoTempo = int(random(minFilo, maxFilo -1));
+    }
+    while(filoTempo == filo30Secondi)
+    {
+      filo30Secondi = int(random(minFilo, maxFilo -1));
+    }
   }
 }  
-  
-  boolean startButtonIsLow()
+
+boolean startButtonIsLow()
+{
+  int val = digitalRead(buttonStart);
+  return val == LOW;
+}
+
+int checkFili()
+{
+  for(int i = minFilo; i < maxFilo; i++)
   {
-    int val = digitalRead(buttonStart);
-    return val == LOW;
+    int val = digitalRead(i); 
+    if (val > 0)
+      return i;
   }
-  
-  int checkFili()
-  {
-     for(int i = 10; i < 13; i++)
-     {
-       int val = digitalRead(i); 
-       if (val > 0)
-         return i;
-     }
-     return 0;
-  }
+  return 0;
+}
+
+int assegnaFilo(int maxIndice)
+{
+  int sizeArray = sizeof(porteFili) / sizeof(int);
+  int indice = int(random(0, maxIndice));
+  int portaScelta = porteFili[indice];
+  Serial.println(portaScelta);
+  int indiceUltimo = sizeArray - (sizeArray - maxIndice) -1;
+  porteFili[indice] = porteFili[indiceUltimo];
+  porteFili[indiceUltimo] = portaScelta;
+  return portaScelta;
+}
+
+
+
+
 
 
 

@@ -35,7 +35,7 @@ void writeYouNoob()
   lc.setDigit(0,0,11,false);//b
 }
 
-void writeError(int cavo)
+void writeError(byte cavo)
 {
   
   lc.clearDisplay(0); 
@@ -44,8 +44,8 @@ void writeError(int cavo)
   lc.setDigit(0,5,25,false);//r
   lc.setDigit(0,4,0,false);//o
   lc.setDigit(0,3,25,false);//r
-  
-  lc.setDigit(0,1,1,false);//1
+  if(cavo > 9)
+      lc.setDigit(0,1,1,false);//1
   lc.setDigit(0,0,cavo%10,false);//cavo
   
 }

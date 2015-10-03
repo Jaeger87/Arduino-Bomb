@@ -1,5 +1,6 @@
 void boom()
 {
+  digitalWrite(sirena, HIGH);
   writeYouDead();
   for (int i = 0; i < numNote; i++)
   {
@@ -27,6 +28,7 @@ void defused()
 
 void noob()
 {
+  digitalWrite(sirena, HIGH);
   writeYouNoob();
     for (int i = 0; i < numNote; i++)
   {
