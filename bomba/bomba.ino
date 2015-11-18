@@ -29,6 +29,7 @@ const byte sirena = 13;
 const int tilt = A0;
 
 int tiltStatus;
+byte filoGlitch = 8;
 byte filoBoom = 9;
 byte filoDisinnesco = 10;
 byte filoTempo = 11;
@@ -42,6 +43,7 @@ boolean tempoTagliato = false;
 boolean disinnescoTagliato = false;
 boolean secondiTagliato = false;
 boolean boomTagliato = false;
+boolean glitchTagliato = false;
 boolean esplosa = false;
 boolean startUp = true;
 boolean opzionale = true;
@@ -58,7 +60,8 @@ void setup()
   // Set brightness level (0 is min, 15 is max) 
   lc.clearDisplay(0); 
   // Clear display register
-
+  
+  inzializzaPorteFili();
   minuti = 0;
   secondi = 0;
   decimiSecondi = 0;
@@ -69,6 +72,7 @@ void setup()
   disinnescoTagliato = false;
   secondiTagliato = false;
   boomTagliato = false;
+  glitchTagliato = false;
   esplosa = false;
   premuto = false;
   opzionale = true;
@@ -149,7 +153,10 @@ void loop()
     {
       delay(tempoDelay);
       noTone(buzzer);
-      scriviTempo(minuti, secondi, decimiSecondi); 
+      if(glitchTagliato)
+        scriviGlitch();
+      else
+        scriviTempo(minuti, secondi, decimiSecondi); 
       if(minuti == 0 && secondi == 0 && decimiSecondi == 0 || startButtonIsLow())
       {
         esplosa = true;
@@ -214,7 +221,21 @@ void scriviTempo(byte minuti, byte secondi, byte decimiSecondi)
 }
 
 
-
+void scriviGlitch()
+{
+  lc.clearDisplay(0); 
+  if (minuti >= 100)
+  {
+    byte centinaia = minuti/ 100;
+    lc.setDigit(0,7,centinaia,false);
+    minuti -= centinaia * 100;
+  }
+  lc.setDigit(0,6,int(random(0, 54)),false);
+  lc.setDigit(0,5,int(random(0, 54)),false);
+  lc.setDigit(0,3,int(random(0, 54)),false);
+  lc.setDigit(0,2,int(random(0, 54)),false);
+  lc.setDigit(0,0,int(random(0, 54)),false);
+}
 
 void aggiornaTempo()
 {
@@ -250,21 +271,14 @@ void settaFili()
     filoTempo = assegnaFilo(4);
     filo30Secondi = assegnaFilo(3);
     filoBoom = assegnaFilo(2);
+    filoGlitch = assegnaFilo(1);
   }
   else
   {
-
-    filoDisinnesco = int(random(minFilo, maxFilo -1)); 
-    filoTempo = int(random(minFilo, maxFilo -1)); 
-    filo30Secondi = int(random(minFilo, maxFilo -1));
-    while(filoDisinnesco == filoTempo)
-    {
-      filoTempo = int(random(minFilo, maxFilo -1));
-    }
-    while(filoTempo == filo30Secondi)
-    {
-      filo30Secondi = int(random(minFilo, maxFilo -1));
-    }
+    filoTempo = assegnaFilo(4);
+    filo30Secondi = assegnaFilo(3);
+    filoDisinnesco = assegnaFilo(2);
+    filoGlitch = assegnaFilo(1);
   }
 }  
 
@@ -299,6 +313,12 @@ int assegnaFilo(int maxIndice)
 
 
 
+
+void inzializzaPorteFili()
+{
+  for(int porta = minFilo; porta < maxFilo; porta++)
+    porteFili[porta - minFilo] = porta;
+}
 
 
 

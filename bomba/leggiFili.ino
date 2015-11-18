@@ -41,15 +41,26 @@ void leggiFili()
   }
 
 
-int valTilt = digitalRead(tilt);
+  if(!glitchTagliato)
+  {
+    int val = digitalRead(filoGlitch);
+    if (val > 0)
+    {
+      glitchTagliato = true;
+      return;
+    }
+  }
 
-if (valTilt != tiltStatus)
-      {
-        boom();
-        return;
-      }
-      
-      
+
+  int valTilt = digitalRead(tilt);
+
+  if (valTilt != tiltStatus)
+  {
+    boom();
+    return;
+  }
+
+
   if(opzionale) 
     if (!boomTagliato)
     {
@@ -62,6 +73,7 @@ if (valTilt != tiltStatus)
     }
 
 }
+
 
 
 

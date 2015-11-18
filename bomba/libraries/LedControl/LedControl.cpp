@@ -159,7 +159,7 @@ void LedControl::setDigit(int addr, int digit, byte value, boolean dp) {
 
     if(addr<0 || addr>=maxDevices)
 	return;
-    if(digit<0 || digit>7 || value>30)
+    if(digit<0 || digit>7 || value>127)
 	return;
     offset=addr*8;
     v=charTable[value];
@@ -176,7 +176,7 @@ void LedControl::setChar(int addr, int digit, char value, boolean dp) {
 
     if(addr<0 || addr>=maxDevices)
 	return;
-    if(digit<0 || digit>7)
+    if(digit<0 || digit>127)
  	return;
     offset=addr*8;
     index=(byte)value;
