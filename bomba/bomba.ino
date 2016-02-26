@@ -11,12 +11,13 @@ enum  stati {
 stati statoBomba = START; 
 
 int porteFili[] = {
-  8,9,10,11,12};
+  512,256,128,64,32,16};
 
 int numNote = 16;
 int nota[] = {
   261, 528, 261, 528, 261, 528, 261, 528,  261, 528, 261, 528, 261, 528, 261, 528};
 
+const byte rumor = 15;
 
 const byte minFilo = 8;
 const byte maxFilo = 13;
@@ -29,11 +30,11 @@ const byte sirena = 13;
 const int tilt = A0;
 
 int tiltStatus;
-byte filoGlitch = 8;
-byte filoBoom = 9;
-byte filoDisinnesco = 10;
-byte filoTempo = 11;
-byte filo30Secondi = 12;
+int filoGlitch = 512;
+int filoBoom = 256;
+int filoDisinnesco = 128;
+int filoTempo = 64;
+int filo30Secondi = 32;
 byte minuti = 0;
 byte secondi = 4;
 byte decimiSecondi = 5;
@@ -62,6 +63,10 @@ void setup()
   // Clear display register
   
   inzializzaPorteFili();
+
+for(int h = 0; h < 6; h++)
+Serial.println(porteFili[h]);
+  
   minuti = 0;
   secondi = 0;
   decimiSecondi = 0;
@@ -124,16 +129,26 @@ void loop()
       if (val == HIGH && minuti > 0)
       {
         int fili = checkFili();
-        if (fili > 0 && fili != 12)
+        if (fili == 8)
         {
           writeError(fili);
           delay(15);
         }
         else
         {
-          if(fili > 0)
+          if(fili == 0)
             opzionale = false;
           settaFili();
+Serial.print("tempo");
+Serial.println(filoTempo);
+Serial.print("glitch ");
+Serial.println(filoGlitch); 
+Serial.print("disinnesco ");
+Serial.println(filoDisinnesco);     
+      Serial.print("boom");    
+            Serial.println(filoBoom);
+      Serial.print("30 secondi");    
+            Serial.println(filo30Secondi); 
           startUp = true;
           statoBomba = INFUNZIONE;
           tempoDelay = 100;
@@ -267,6 +282,7 @@ void settaFili()
 {
   if(opzionale)
   {
+    Serial.println("OOOK");
     filoDisinnesco = assegnaFilo(5);
     filoTempo = assegnaFilo(4);
     filo30Secondi = assegnaFilo(3);
@@ -288,23 +304,20 @@ boolean startButtonIsLow()
   return val == LOW;
 }
 
-int checkFili()
+int checkFili() //RIFARE
 {
-  for(int i = minFilo; i < maxFilo; i++)
-  {
-    int val = digitalRead(i); 
-    if (val > 0)
-      return i;
-  }
-  return 0;
+  int wiresValue = cleanRumor(analogRead(A7));
+  if (wiresValue > 1007)
+    return 1;
+  return 8;
 }
 
 int assegnaFilo(int maxIndice)
 {
+  maxIndice++;
   int sizeArray = sizeof(porteFili) / sizeof(int);
-  int indice = int(random(0, maxIndice));
+  int indice = int(random(1, maxIndice));
   int portaScelta = porteFili[indice];
-  Serial.println(portaScelta);
   int indiceUltimo = sizeArray - (sizeArray - maxIndice) -1;
   porteFili[indice] = porteFili[indiceUltimo];
   porteFili[indiceUltimo] = portaScelta;
@@ -316,8 +329,8 @@ int assegnaFilo(int maxIndice)
 
 void inzializzaPorteFili()
 {
-  for(int porta = minFilo; porta < maxFilo; porta++)
-    porteFili[porta - minFilo] = porta;
+  for(int i = 4; i < 10; i++)
+      porteFili[i - 4] = (int)pow(2,i) + 1;
 }
 
 

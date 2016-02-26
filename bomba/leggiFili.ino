@@ -1,10 +1,13 @@
 void leggiFili()
 {
+  int wireValue = cleanRumor(analogRead(A7));
   if(!tempoTagliato)
   {
-    int val = digitalRead(filoTempo);
-    if (val > 0)
+    
+    if (checkWire(wireValue, filoTempo))
     {
+      Serial.println(wireValue);
+      Serial.println("tempo");
       tempoTagliato = true;
       tempoDelay -= 60;
       decimiDaTogliere = 6;
@@ -16,9 +19,10 @@ void leggiFili()
 
   if (!secondiTagliato)
   {
-    int val = digitalRead(filo30Secondi);
-    if (val > 0)
+    if (checkWire(wireValue, filo30Secondi))
     {
+      Serial.println(wireValue);
+      Serial.println("secondi");
       secondiTagliato = true;
       if (minuti > 0 || secondi > 30)
       {
@@ -31,9 +35,10 @@ void leggiFili()
 
   if(!disinnescoTagliato)
   {
-    int val = digitalRead(filoDisinnesco);
-    if (val > 0)
+    if (checkWire(wireValue, filoDisinnesco))
     {
+            Serial.println(wireValue);
+      Serial.println("disinnesco");
       disinnescoTagliato = true;
       defused();
       return;
@@ -43,15 +48,16 @@ void leggiFili()
 
   if(!glitchTagliato)
   {
-    int val = digitalRead(filoGlitch);
-    if (val > 0)
+    if (checkWire(wireValue, filoGlitch))
     {
+            Serial.println(wireValue);
+      Serial.println("glitch");
       glitchTagliato = true;
       return;
     }
   }
 
-
+/*
   int valTilt = digitalRead(tilt);
 
   if (valTilt != tiltStatus)
@@ -59,14 +65,16 @@ void leggiFili()
     boom();
     return;
   }
-
+*/
 
   if(opzionale) 
     if (!boomTagliato)
     {
-      int val = digitalRead(filoBoom);
-      if (val > 0)
+
+      if (checkWire(wireValue, filoBoom))
       {
+                    Serial.println(wireValue);
+      Serial.println("boom");
         boomTagliato = true;
         boom();
       }
