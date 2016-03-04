@@ -11,22 +11,21 @@ enum  stati {
 stati statoBomba = START; 
 
 int porteFili[] = {
-  512,256,128,64,32,16};
+  512,256,128,64,32, 16};
+
+byte rumor = 15;
 
 int numNote = 16;
 int nota[] = {
   261, 528, 261, 528, 261, 528, 261, 528,  261, 528, 261, 528, 261, 528, 261, 528};
 
-const byte rumor = 15;
-
-const byte minFilo = 8;
-const byte maxFilo = 13;
 
 
 const byte buttonTime = 4;
 const byte buttonStart = 3;
 const byte buzzer = 2;
-const byte sirena = 13;
+const byte sirena = 11;
+const byte defuseLight = 12;
 const int tilt = A0;
 
 int tiltStatus;
@@ -61,12 +60,9 @@ void setup()
   // Set brightness level (0 is min, 15 is max) 
   lc.clearDisplay(0); 
   // Clear display register
-  
+
   inzializzaPorteFili();
 
-for(int h = 0; h < 6; h++)
-Serial.println(porteFili[h]);
-  
   minuti = 0;
   secondi = 0;
   decimiSecondi = 0;
@@ -84,12 +80,8 @@ Serial.println(porteFili[h]);
   randomSeed(analogRead(0));
 
   pinMode(tilt, INPUT);
-  pinMode(8, INPUT_PULLUP);
-  pinMode(9, INPUT_PULLUP);
-  pinMode(10, INPUT_PULLUP);
-  pinMode(11, INPUT_PULLUP);
-  pinMode(12, INPUT_PULLUP);
-  pinMode(13, OUTPUT);
+  pinMode(defuseLight, OUTPUT);
+  pinMode(sirena, OUTPUT);
 } 
 
 
@@ -129,26 +121,26 @@ void loop()
       if (val == HIGH && minuti > 0)
       {
         int fili = checkFili();
-        if (fili == 8)
+        if (fili > 0 && fili < sizeof(porteFili) / sizeof(int))
         {
           writeError(fili);
-          delay(15);
+          delay(100);
         }
         else
         {
-          if(fili == 0)
+          if(fili == sizeof(porteFili) / sizeof(int))
             opzionale = false;
           settaFili();
-Serial.print("tempo");
-Serial.println(filoTempo);
-Serial.print("glitch ");
-Serial.println(filoGlitch); 
-Serial.print("disinnesco ");
-Serial.println(filoDisinnesco);     
-      Serial.print("boom");    
-            Serial.println(filoBoom);
-      Serial.print("30 secondi");    
-            Serial.println(filo30Secondi); 
+          Serial.print("tempo");
+          Serial.println(filoTempo);
+          Serial.print("glitch ");
+          Serial.println(filoGlitch); 
+          Serial.print("disinnesco ");
+          Serial.println(filoDisinnesco);     
+          Serial.print("boom");    
+          Serial.println(filoBoom);
+          Serial.print("30 secondi");    
+          Serial.println(filo30Secondi); 
           startUp = true;
           statoBomba = INFUNZIONE;
           tempoDelay = 100;
@@ -198,6 +190,7 @@ Serial.println(filoDisinnesco);
       {
         statoBomba = START;
         digitalWrite(sirena, LOW);
+        digitalWrite(defuseLight, LOW);
         tone(buzzer, 50);
         delay(120);
         noTone(buzzer);
@@ -245,10 +238,13 @@ void scriviGlitch()
     lc.setDigit(0,7,centinaia,false);
     minuti -= centinaia * 100;
   }
+  lc.setDigit(0,7,int(random(0, 54)),false);
   lc.setDigit(0,6,int(random(0, 54)),false);
   lc.setDigit(0,5,int(random(0, 54)),false);
+  lc.setDigit(0,4,int(random(0, 54)),false);
   lc.setDigit(0,3,int(random(0, 54)),false);
   lc.setDigit(0,2,int(random(0, 54)),false);
+  lc.setDigit(0,1,int(random(0, 54)),false);
   lc.setDigit(0,0,int(random(0, 54)),false);
 }
 
@@ -280,21 +276,21 @@ void aggiornaTempo()
 
 void settaFili()
 {
+  int sizeArray = sizeof(porteFili) / sizeof(int);
   if(opzionale)
   {
-    Serial.println("OOOK");
-    filoDisinnesco = assegnaFilo(5);
-    filoTempo = assegnaFilo(4);
-    filo30Secondi = assegnaFilo(3);
-    filoBoom = assegnaFilo(2);
-    filoGlitch = assegnaFilo(1);
+    filoDisinnesco = assegnaFilo(sizeArray);
+    filoTempo = assegnaFilo(sizeArray - 1);
+    filo30Secondi = assegnaFilo(sizeArray - 2);
+    filoBoom = assegnaFilo(sizeArray - 3);
+    filoGlitch = assegnaFilo(sizeArray - 4);
   }
   else
   {
-    filoTempo = assegnaFilo(4);
-    filo30Secondi = assegnaFilo(3);
-    filoDisinnesco = assegnaFilo(2);
-    filoGlitch = assegnaFilo(1);
+    filoTempo = assegnaFilo(sizeArray - 1);
+    filo30Secondi = assegnaFilo(sizeArray - 2);
+    filoDisinnesco = assegnaFilo(sizeArray - 3);
+    filoGlitch = assegnaFilo(sizeArray - 4);
   }
 }  
 
@@ -304,19 +300,29 @@ boolean startButtonIsLow()
   return val == LOW;
 }
 
-int checkFili() //RIFARE
+int checkFili() 
 {
+  Serial.println(analogRead(A7));
+  Serial.println(rumor);
   int wiresValue = cleanRumor(analogRead(A7));
-  if (wiresValue > 1007)
-    return 1;
-  return 8;
+  if (wiresValue > 1023 - rumor - 1)
+    return 0;
+  int maxWireValue = 512;
+  int problemWire = 1;
+  while(maxWireValue > rumor)  
+  {
+    if (checkFloatingWire(wiresValue, maxWireValue))
+      return problemWire;
+    maxWireValue /=2;
+    problemWire++;
+  }
+  return 0;
 }
 
 int assegnaFilo(int maxIndice)
 {
-  maxIndice++;
   int sizeArray = sizeof(porteFili) / sizeof(int);
-  int indice = int(random(1, maxIndice));
+  int indice = int(random(0, maxIndice));
   int portaScelta = porteFili[indice];
   int indiceUltimo = sizeArray - (sizeArray - maxIndice) -1;
   porteFili[indice] = porteFili[indiceUltimo];
@@ -329,9 +335,12 @@ int assegnaFilo(int maxIndice)
 
 void inzializzaPorteFili()
 {
-  for(int i = 4; i < 10; i++)
-      porteFili[i - 4] = (int)pow(2,i) + 1;
+  int i;
+  for(i = 9; i > 9 - sizeof(porteFili) / sizeof(int); i--)
+    porteFili[9 - i] = (int)pow(2,i) + 1;
+  rumor = (int)pow(2,i + 1) - 1;
 }
+
 
 
 
