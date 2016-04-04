@@ -1,4 +1,4 @@
-#include "LedControl.h"
+#include "libs/LedControl/LedControl.h"
 #include "types.h"
 
 // Arduino Pin 7 to DIN, 6 to Clk, 5 to LOAD, no.of devices is 1 
@@ -6,9 +6,9 @@ LedControl lc=LedControl(7,6,5,1);
 
 
 enum  stati {
-  START,SETTIME,INFUNZIONE, GAMEOVER};
+  INIT,SETTIME,INFUNZIONE, GAMEOVER};
 
-stati statoBomba = START; 
+stati statoBomba = INIT; 
 
 int porteFili[] = {
   512,256,128,64,32, 16};
@@ -52,36 +52,7 @@ byte decimiDaTogliere = 1;
 
 void setup() 
 { 
-  Serial.begin(9600);
-  // Initialize the MAX7219 device 
-  lc.shutdown(0,false);
-  // Enable display 
-  lc.setIntensity(0,10);
-  // Set brightness level (0 is min, 15 is max) 
-  lc.clearDisplay(0); 
-  // Clear display register
-
-  inzializzaPorteFili();
-
-  minuti = 0;
-  secondi = 0;
-  decimiSecondi = 0;
-  decimiDaTogliere = 1;
-  scriviTempo(minuti, secondi, decimiSecondi);
-
-  tempoTagliato = false;
-  disinnescoTagliato = false;
-  secondiTagliato = false;
-  boomTagliato = false;
-  glitchTagliato = false;
-  esplosa = false;
-  premuto = false;
-  opzionale = true;
-  randomSeed(analogRead(0));
-
-  pinMode(tilt, INPUT);
-  pinMode(defuseLight, OUTPUT);
-  pinMode(sirena, OUTPUT);
+  initialize();
 } 
 
 
@@ -89,9 +60,9 @@ void loop()
 {
   switch(statoBomba)
   {
-  case START:
+  case INIT:
     {
-      setup();
+      initialize();
       statoBomba = SETTIME;
       break;
     }
@@ -188,7 +159,7 @@ void loop()
 
       if (startButtonIsLow() && startUp)
       {
-        statoBomba = START;
+        statoBomba = INIT;
         digitalWrite(sirena, LOW);
         digitalWrite(defuseLight, LOW);
         tone(buzzer, 50);
@@ -311,7 +282,7 @@ int checkFili()
   int problemWire = 1;
   while(maxWireValue > rumor)  
   {
-    if (checkFloatingWire(wiresValue, maxWireValue))
+    if (checkWire(wiresValue, maxWireValue))
       return problemWire;
     maxWireValue /=2;
     problemWire++;
@@ -341,6 +312,39 @@ void inzializzaPorteFili()
   rumor = (int)pow(2,i + 1) - 1;
 }
 
+void initialize()
+{
+    Serial.begin(9600);
+  // Initialize the MAX7219 device 
+  lc.shutdown(0,false);
+  // Enable display 
+  lc.setIntensity(0,10);
+  // Set brightness level (0 is min, 15 is max) 
+  lc.clearDisplay(0); 
+  // Clear display register
+
+  inzializzaPorteFili();
+
+  minuti = 0;
+  secondi = 0;
+  decimiSecondi = 0;
+  decimiDaTogliere = 1;
+  scriviTempo(minuti, secondi, decimiSecondi);
+
+  tempoTagliato = false;
+  disinnescoTagliato = false;
+  secondiTagliato = false;
+  boomTagliato = false;
+  glitchTagliato = false;
+  esplosa = false;
+  premuto = false;
+  opzionale = true;
+  randomSeed(analogRead(0));
+
+  pinMode(tilt, INPUT);
+  pinMode(defuseLight, OUTPUT);
+  pinMode(sirena, OUTPUT);
+}
 
 
 
